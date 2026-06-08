@@ -184,7 +184,9 @@ async fn start_api(
             // Determine which signing provider to use (network-level or global)
             let signing_provider = if let Some(ref signing_key) = network_config.signing_provider {
                 signing_key
-            } else { config.signing_provider.as_ref()? };
+            } else {
+                config.signing_provider.as_ref()?
+            };
 
             // Check if only private keys are configured
             let is_private_key_only = signing_provider.private_keys.is_some()
