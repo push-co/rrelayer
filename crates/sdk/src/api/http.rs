@@ -94,8 +94,8 @@ impl HttpClient {
 
         self.handle_response_status(&response)?;
         let response = response.error_for_status()?;
-        let data = response.json::<T>().await?;
-        Ok(Some(data))
+        let data = response.json::<Option<T>>().await?;
+        Ok(data)
     }
 
     pub async fn get_with_query<T, Q>(&self, endpoint: &str, query: Option<Q>) -> ApiResult<T>
