@@ -6,6 +6,7 @@ use crate::background_tasks::{
     balance_monitor::balance_monitor, webhook_manager_task::run_webhook_manager_task,
 };
 use crate::gas::{blob_gas_oracle, gas_oracle, BlobGasOracleCache, GasOracleCache};
+use crate::shared::kms_canary_permission_check::run_kms_permission_canary_task;
 use crate::{
     background_tasks::automatic_top_up_task::run_automatic_top_up_task, provider::EvmProvider,
     transaction::queue_system::TransactionsQueues, webhooks::WebhookManager, PostgresClient,
@@ -27,6 +28,9 @@ pub async fn run_background_tasks(
     safe_proxy_manager: Arc<SafeProxyManager>,
 ) {
     info!("Starting background tasks");
+
+    let canary_kms_permission_check_task =
+        run_kms_permission_canary_task(Arc::clone(&providers), postgres_client.clone());
 
     let gas_oracle_task = gas_oracle(Arc::clone(&providers), gas_oracle_cache);
 
@@ -57,9 +61,20 @@ pub async fn run_background_tasks(
     }
 
     if let Some(blob_task) = blob_gas_oracle_task {
-        tokio::join!(gas_oracle_task, blob_task, top_up_task, balance_monitor_task);
+        tokio::join!(
+            gas_oracle_task,
+            blob_task,
+            top_up_task,
+            balance_monitor_task,
+            canary_kms_permission_check_task
+        );
     } else {
-        tokio::join!(gas_oracle_task, top_up_task, balance_monitor_task);
+        tokio::join!(
+            gas_oracle_task,
+            top_up_task,
+            balance_monitor_task,
+            canary_kms_permission_check_task
+        );
     }
 
     info!("Background tasks spawned up");
