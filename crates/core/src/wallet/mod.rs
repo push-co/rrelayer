@@ -119,7 +119,13 @@ impl From<WalletError> for HttpError {
 
 impl From<alloy::signers::Error> for WalletError {
     fn from(error: alloy::signers::Error) -> Self {
-        WalletError::GenericSignerError(format!("Alloy signer error: {}", error))
+        let mut chain = format!("Alloy signer error: {error}");
+        let mut src = std::error::Error::source(&error);
+        while let Some(e) = src {
+            chain.push_str(&format!("  ->  {e}"));
+            src = e.source();
+        }
+        WalletError::GenericSignerError(chain)
     }
 }
 

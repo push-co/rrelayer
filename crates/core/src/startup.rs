@@ -4,6 +4,7 @@ use crate::background_tasks::run_background_tasks;
 use crate::common_types::EvmAddress;
 use crate::gas::{BlobGasOracleCache, GasOracleCache};
 use crate::network::{create_network_routes, ChainId};
+use crate::shared::kms_canary_permission_check::{run_kms_permission_canary, CanaryError};
 use crate::shared::HttpError;
 use crate::webhooks::WebhookManager;
 use crate::yaml::{AllOrOneOrManyAddresses, ApiKey, NetworkPermissionsConfig, ReadYamlError};
@@ -355,6 +356,9 @@ pub enum StartError {
 
     #[error("To run rrelayer you need to define at least one network in the yaml file")]
     NoNetworksDefinedInYaml,
+
+    #[error("{0}")]
+    SigningCanary(#[from] CanaryError),
 }
 
 pub async fn start(project_path: &Path) -> Result<(), StartError> {
@@ -451,6 +455,8 @@ pub async fn start(project_path: &Path) -> Result<(), StartError> {
     let safe_proxy_manager = Arc::new(SafeProxyManager::new(safe_configs));
     let relayer_internal_only = RelayersInternalOnly::new(relayer_internal_only);
     let relayers_allowed_for_random = RelayersAllowedForRandom::new(relayers_allowed_for_random);
+
+    run_kms_permission_canary(&providers, &postgres_client).await?;
 
     let transaction_queue = startup_transactions_queues(
         gas_oracle_cache.clone(),
