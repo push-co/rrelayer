@@ -247,6 +247,7 @@ impl AwsKmsWalletManager {
                     "Effect": "Allow",
                     "Principal": { "AWS": format!("arn:aws:iam::{}:root", account_id) },
                     "Action": [
+                        "kms:Sign",
                         "kms:DescribeKey",
                         "kms:ListAliases",
                         "kms:ListKeyPolicies",
