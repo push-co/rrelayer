@@ -62,6 +62,12 @@ async fn check_balances_for_chain(
     let min_balance = get_minimum_balance_threshold(&chain_id);
     let min_balance_formatted = format_ether(min_balance);
 
+    // Emit the per-chain threshold so alerting can compare balance < min without a hard-coded value.
+    crate::metrics::record_relayer_native_min_balance(
+        &chain_id.u64().to_string(),
+        min_balance_formatted.parse::<f64>().unwrap_or(0.0),
+    );
+
     info!("Checking balances for chain {} (minimum: {} ETH)", chain_id, min_balance_formatted);
 
     let relayers = db.get_all_relayers_for_chain(&chain_id).await?;
@@ -69,9 +75,18 @@ async fn check_balances_for_chain(
     for relayer in relayers {
         match provider.get_balance(&relayer.address).await {
             Ok(balance) => {
-                if balance < min_balance {
-                    let balance_formatted = format_ether(balance);
+                let balance_formatted = format_ether(balance);
 
+                // Emit the balance to Prometheus so groundcover can alert on low gas,
+                // rather than relying on the warn! log below being noticed.
+                crate::metrics::record_relayer_native_balance(
+                    &chain_id.u64().to_string(),
+                    &relayer.id.to_string(),
+                    &relayer.address.to_string(),
+                    balance_formatted.parse::<f64>().unwrap_or(0.0),
+                );
+
+                if balance < min_balance {
                     warn!(
                         "Low balance warning: relayer {} (ID: {}) on chain {} has balance {} ETH (minimum recommended: {} ETH)",
                         relayer.address,
@@ -95,7 +110,6 @@ async fn check_balances_for_chain(
                         .await;
                     }
                 } else {
-                    let balance_formatted = format_ether(balance);
                     info!(
                         "Balance OK: relayer {} (ID: {}) on chain {} has balance {} ETH",
                         relayer.address, relayer.id, chain_id, balance_formatted

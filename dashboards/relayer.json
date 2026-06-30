@@ -1,0 +1,455 @@
+{
+ "annotations": {
+  "list": [
+   {
+    "builtIn": 1,
+    "datasource": {
+     "type": "grafana",
+     "uid": "-- Grafana --"
+    },
+    "enable": true,
+    "hide": true,
+    "iconColor": "rgba(0, 211, 255, 1)",
+    "name": "Annotations & Alerts",
+    "type": "dashboard"
+   }
+  ]
+ },
+ "editable": true,
+ "fiscalYearStartMonth": 0,
+ "graphTooltip": 1,
+ "links": [],
+ "preload": false,
+ "schemaVersion": 40,
+ "tags": [
+  "push",
+  "relayer",
+  "rrelayer",
+  "balances"
+ ],
+ "timezone": "",
+ "weekStart": "",
+ "title": "rrelayer \u2014 Relayer gas balances",
+ "uid": "rrelayer-balances",
+ "version": 1,
+ "refresh": "1m",
+ "time": {
+  "from": "now-24h",
+  "to": "now"
+ },
+ "timepicker": {},
+ "templating": {
+  "list": [
+   {
+    "name": "env",
+    "type": "query",
+    "label": "Environment",
+    "datasource": {
+     "type": "prometheus",
+     "uid": "ddz2le6n8pypsa"
+    },
+    "definition": "label_values(relayer_native_balance, env)",
+    "query": {
+     "qryType": 1,
+     "query": "label_values(relayer_native_balance, env)",
+     "refId": "PrometheusVariableQueryEditor-VariableQuery"
+    },
+    "refresh": 1,
+    "includeAll": false,
+    "current": {},
+    "options": [],
+    "regex": ""
+   },
+   {
+    "name": "namespace",
+    "type": "query",
+    "label": "Namespace",
+    "datasource": {
+     "type": "prometheus",
+     "uid": "ddz2le6n8pypsa"
+    },
+    "definition": "label_values(relayer_native_balance{env=\"$env\"}, namespace)",
+    "query": {
+     "qryType": 1,
+     "query": "label_values(relayer_native_balance{env=\"$env\"}, namespace)",
+     "refId": "PrometheusVariableQueryEditor-VariableQuery"
+    },
+    "refresh": 1,
+    "includeAll": false,
+    "current": {},
+    "options": [],
+    "regex": ""
+   }
+  ]
+ },
+ "panels": [
+  {
+   "type": "row",
+   "title": "Relayer gas balances",
+   "id": 1,
+   "gridPos": {
+    "h": 1,
+    "w": 24,
+    "x": 0,
+    "y": 0
+   }
+  },
+  {
+   "type": "stat",
+   "title": "Relayers below minimum",
+   "id": 2,
+   "datasource": {
+    "type": "prometheus",
+    "uid": "ddz2le6n8pypsa"
+   },
+   "pluginVersion": "11.3.7",
+   "gridPos": {
+    "h": 5,
+    "w": 6,
+    "x": 0,
+    "y": 1
+   },
+   "targets": [
+    {
+     "datasource": {
+      "type": "prometheus",
+      "uid": "ddz2le6n8pypsa"
+     },
+     "editorMode": "code",
+     "expr": "count((relayer_native_balance{env=\"$env\", namespace=\"$namespace\"}) < on(chain_id) group_left() (relayer_native_min_balance{env=\"$env\", namespace=\"$namespace\"})) or vector(0)",
+     "range": true,
+     "instant": false,
+     "refId": "A"
+    }
+   ],
+   "fieldConfig": {
+    "defaults": {
+     "color": {
+      "mode": "thresholds"
+     },
+     "mappings": [],
+     "thresholds": {
+      "mode": "absolute",
+      "steps": [
+       {
+        "color": "green"
+       },
+       {
+        "color": "red",
+        "value": 1
+       }
+      ]
+     },
+     "unit": "none"
+    },
+    "overrides": []
+   },
+   "options": {
+    "reduceOptions": {
+     "calcs": [
+      "lastNotNull"
+     ],
+     "fields": "",
+     "values": false
+    },
+    "orientation": "auto",
+    "colorMode": "value",
+    "graphMode": "area",
+    "textMode": "auto",
+    "wideLayout": true
+   },
+   "description": "Number of relayer wallets whose native (gas) balance is below the per-chain minimum. Should be 0."
+  },
+  {
+   "type": "stat",
+   "title": "Lowest relayer balance",
+   "id": 3,
+   "datasource": {
+    "type": "prometheus",
+    "uid": "ddz2le6n8pypsa"
+   },
+   "pluginVersion": "11.3.7",
+   "gridPos": {
+    "h": 5,
+    "w": 6,
+    "x": 6,
+    "y": 1
+   },
+   "targets": [
+    {
+     "datasource": {
+      "type": "prometheus",
+      "uid": "ddz2le6n8pypsa"
+     },
+     "editorMode": "code",
+     "expr": "min(relayer_native_balance{env=\"$env\", namespace=\"$namespace\"})",
+     "range": true,
+     "instant": false,
+     "refId": "A"
+    }
+   ],
+   "fieldConfig": {
+    "defaults": {
+     "color": {
+      "mode": "thresholds"
+     },
+     "mappings": [],
+     "thresholds": {
+      "mode": "absolute",
+      "steps": [
+       {
+        "color": "red"
+       },
+       {
+        "color": "yellow",
+        "value": 0.002
+       },
+       {
+        "color": "green",
+        "value": 0.005
+       }
+      ]
+     },
+     "unit": "ether"
+    },
+    "overrides": []
+   },
+   "options": {
+    "reduceOptions": {
+     "calcs": [
+      "lastNotNull"
+     ],
+     "fields": "",
+     "values": false
+    },
+    "orientation": "auto",
+    "colorMode": "value",
+    "graphMode": "area",
+    "textMode": "auto",
+    "wideLayout": true
+   },
+   "description": "Smallest native balance across all relayers (ETH)."
+  },
+  {
+   "type": "stat",
+   "title": "Relayers tracked",
+   "id": 4,
+   "datasource": {
+    "type": "prometheus",
+    "uid": "ddz2le6n8pypsa"
+   },
+   "pluginVersion": "11.3.7",
+   "gridPos": {
+    "h": 5,
+    "w": 6,
+    "x": 12,
+    "y": 1
+   },
+   "targets": [
+    {
+     "datasource": {
+      "type": "prometheus",
+      "uid": "ddz2le6n8pypsa"
+     },
+     "editorMode": "code",
+     "expr": "count(relayer_native_balance{env=\"$env\", namespace=\"$namespace\"})",
+     "range": true,
+     "instant": false,
+     "refId": "A"
+    }
+   ],
+   "fieldConfig": {
+    "defaults": {
+     "color": {
+      "mode": "thresholds"
+     },
+     "mappings": [],
+     "thresholds": {
+      "mode": "absolute",
+      "steps": [
+       {
+        "color": "green"
+       }
+      ]
+     },
+     "unit": "none"
+    },
+    "overrides": []
+   },
+   "options": {
+    "reduceOptions": {
+     "calcs": [
+      "lastNotNull"
+     ],
+     "fields": "",
+     "values": false
+    },
+    "orientation": "auto",
+    "colorMode": "value",
+    "graphMode": "area",
+    "textMode": "auto",
+    "wideLayout": true
+   },
+   "description": "Number of relayer/address series currently reporting a balance."
+  },
+  {
+   "type": "stat",
+   "title": "Metric freshness",
+   "id": 5,
+   "datasource": {
+    "type": "prometheus",
+    "uid": "ddz2le6n8pypsa"
+   },
+   "pluginVersion": "11.3.7",
+   "gridPos": {
+    "h": 5,
+    "w": 6,
+    "x": 18,
+    "y": 1
+   },
+   "targets": [
+    {
+     "datasource": {
+      "type": "prometheus",
+      "uid": "ddz2le6n8pypsa"
+     },
+     "editorMode": "code",
+     "expr": "time() - max(timestamp(relayer_native_balance{env=\"$env\", namespace=\"$namespace\"}))",
+     "range": true,
+     "instant": false,
+     "refId": "A"
+    }
+   ],
+   "fieldConfig": {
+    "defaults": {
+     "color": {
+      "mode": "thresholds"
+     },
+     "mappings": [],
+     "thresholds": {
+      "mode": "absolute",
+      "steps": [
+       {
+        "color": "green"
+       },
+       {
+        "color": "yellow",
+        "value": 900
+       },
+       {
+        "color": "red",
+        "value": 1800
+       }
+      ]
+     },
+     "unit": "s"
+    },
+    "overrides": []
+   },
+   "options": {
+    "reduceOptions": {
+     "calcs": [
+      "lastNotNull"
+     ],
+     "fields": "",
+     "values": false
+    },
+    "orientation": "auto",
+    "colorMode": "value",
+    "graphMode": "area",
+    "textMode": "auto",
+    "wideLayout": true
+   },
+   "description": "Seconds since the last balance sample. Balance monitor runs every ~10m; high = sweep stalled."
+  },
+  {
+   "type": "timeseries",
+   "title": "Relayer native balance (ETH)",
+   "id": 6,
+   "datasource": {
+    "type": "prometheus",
+    "uid": "ddz2le6n8pypsa"
+   },
+   "pluginVersion": "11.3.7",
+   "gridPos": {
+    "h": 10,
+    "w": 18,
+    "x": 0,
+    "y": 6
+   },
+   "targets": [
+    {
+     "datasource": {
+      "type": "prometheus",
+      "uid": "ddz2le6n8pypsa"
+     },
+     "editorMode": "code",
+     "expr": "relayer_native_balance{env=\"$env\", namespace=\"$namespace\"}",
+     "range": true,
+     "instant": false,
+     "refId": "A",
+     "legendFormat": "{{chain_id}} \u00b7 {{address}}"
+    },
+    {
+     "datasource": {
+      "type": "prometheus",
+      "uid": "ddz2le6n8pypsa"
+     },
+     "editorMode": "code",
+     "expr": "relayer_native_min_balance{env=\"$env\", namespace=\"$namespace\"}",
+     "range": true,
+     "instant": false,
+     "refId": "B",
+     "legendFormat": "min (chain {{chain_id}})"
+    }
+   ],
+   "fieldConfig": {
+    "defaults": {
+     "custom": {
+      "drawStyle": "line",
+      "lineWidth": 1,
+      "fillOpacity": 10,
+      "showPoints": "never",
+      "spanNulls": false
+     },
+     "color": {
+      "mode": "palette-classic"
+     },
+     "mappings": [],
+     "unit": "ether"
+    },
+    "overrides": []
+   },
+   "options": {
+    "legend": {
+     "displayMode": "table",
+     "placement": "bottom",
+     "calcs": [
+      "lastNotNull",
+      "min"
+     ]
+    },
+    "tooltip": {
+     "mode": "multi",
+     "sort": "none"
+    }
+   },
+   "description": "Per-relayer native gas balance over time, with the per-chain minimum threshold lines."
+  },
+  {
+   "type": "text",
+   "title": "About this dashboard",
+   "id": 7,
+   "gridPos": {
+    "h": 10,
+    "w": 6,
+    "x": 18,
+    "y": 6
+   },
+   "options": {
+    "mode": "markdown",
+    "content": "**rrelayer \u2014 relayer gas balances** (PUSH-2126)\n\nBuilt from rrelayer's `/metrics`:\n\n- `relayer_native_balance{chain_id,relayer_id,address}` \u2014 gas balance (ETH)\n- `relayer_native_min_balance{chain_id}` \u2014 per-chain minimum threshold\n\nEmitted by the `balance_monitor` background task (~every 10m).\n\nAlert: `relayer_native_balance < relayer_native_min_balance` (see `relayer-alerts.yml`)."
+   }
+  }
+ ]
+}
