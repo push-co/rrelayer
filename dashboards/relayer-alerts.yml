@@ -1,0 +1,28 @@
+# Prometheus-format alerting rules for rrelayer's balance metrics 
+# Portable: load via Prometheus `rule_files`, a Grafana/Mimir ruler, or groundcover
+# (alerts-as-code). Thresholds come from the relayer's own per-chain minimum, so there's
+# nothing to hard-code here. Tune `for:`/severity per environment.
+groups:
+  - name: rrelayer-balances
+    rules:
+      # The case Brandon flagged: relayer gas silently warn-logging while running low.
+      # Now it's a metric, so page on it.
+      - alert: RelayerNativeBalanceLow
+        expr: |
+          relayer_native_balance
+          < on (chain_id) group_left () relayer_native_min_balance
+        for: 10m
+        labels: { severity: critical, service: rrelayer }
+        annotations:
+          summary: "Relayer {{ $labels.address }} low on gas (chain {{ $labels.chain_id }})"
+          description: "relayer_native_balance is below relayer_native_min_balance for 10m. Top up the relayer before it can't sign."
+
+      # Balance monitor runs ~every 10m; if no fresh sample in 30m the sweep (or scrape) is broken,
+      # which would hide a low balance.
+      - alert: RelayerBalanceMetricStale
+        expr: (time() - max(timestamp(relayer_native_balance))) > 1800
+        for: 5m
+        labels: { severity: warning, service: rrelayer }
+        annotations:
+          summary: "Relayer balance metric is stale"
+          description: "No relayer_native_balance sample in >30m — the balance_monitor task or the /metrics scrape may be down."
