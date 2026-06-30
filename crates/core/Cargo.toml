@@ -59,6 +59,7 @@ sha2 = { workspace = true, optional = true }
 p256 = { version = "0.13", features = ["ecdsa"], optional = true }
 tower = "0.5.2"
 subtle = "2.6.1"
+prometheus = "0.13"
 cryptoki = { version = "0.12", optional = true }
 secrecy = {  version = "0.10", optional = true }
 jsonwebtoken = { version = "10", optional = true }

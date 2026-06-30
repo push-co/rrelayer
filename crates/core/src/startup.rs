@@ -34,7 +34,7 @@ use axum::{
     http::{HeaderValue, Request, StatusCode},
     middleware,
     middleware::Next,
-    response::Response,
+    response::{IntoResponse, Response},
     routing::get,
     Json, Router,
 };
@@ -69,6 +69,15 @@ pub enum StartApiError {
 /// Health check endpoint
 async fn health_check() -> Result<Json<String>, HttpError> {
     Ok(Json("healthy".to_string()))
+}
+
+/// Prometheus scrape endpoint. Renders the process metrics registry in text format.
+async fn metrics_handler() -> impl IntoResponse {
+    (
+        StatusCode::OK,
+        [("content-type", "text/plain; version=0.0.4; charset=utf-8")],
+        crate::metrics::gather(),
+    )
 }
 
 /// Middleware that logs all HTTP requests and responses with timing information.
@@ -249,6 +258,7 @@ async fn start_api(
 
     let app = Router::new()
         .route("/health", get(health_check))
+        .route("/metrics", get(metrics_handler))
         .merge(api_routes)
         .layer(middleware::from_fn(inject_basic_auth_status))
         .layer(middleware::from_fn(activity_logger))
