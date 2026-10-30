@@ -62,7 +62,7 @@ subtle = "2.6.1"
 prometheus = "0.13"
 cryptoki = { version = "0.12", optional = true }
 secrecy = {  version = "0.10", optional = true }
-jsonwebtoken = { version = "10", optional = true }
+jsonwebtoken = { version = "10.3", features = ["rust_crypto"], optional = true }
 
 [features]
 default = ["gcp", "aws", "privy", "turnkey", "pkcs11", "fireblocks"]
